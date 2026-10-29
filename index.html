@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Respira, Jé</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: um "boletim do tempo" do bolso. Coluna única de leitura, com faixas de previsão e gráficos interativos no meio. */
+:root{
+  --bg:#eaf2f6;
+  --surface:#ffffff;
+  --ink:#0d2433;
+  --muted:#4a6475;
+  --line:#c9d9e2;
+  --sun:#f2a516;
+  --sun-ink:#7a4e00;
+  --sea:#0b7285;
+  --storm:#5b6f8a;
+  --up:#0b7a52;
+  --down:#c2410c;
+  --s1:#2a78d6;
+  --s2:#eb6834;
+  --chip:#dcebf2;
+  --font-display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-data:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1a24; --surface:#13263334; --surface:#132633; --ink:#e7f1f6; --muted:#9db4c2; --line:#24404f;
+    --sun:#f5b733; --sun-ink:#f5c860; --sea:#3bc9db; --storm:#8ea2bd; --up:#38c991; --down:#ff8a57;
+    --s1:#3987e5; --s2:#d95926; --chip:#1b3443; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1a24; --surface:#132633; --ink:#e7f1f6; --muted:#9db4c2; --line:#24404f;
+  --sun:#f5b733; --sun-ink:#f5c860; --sea:#3bc9db; --storm:#8ea2bd; --up:#38c991; --down:#ff8a57;
+  --s1:#3987e5; --s2:#d95926; --chip:#1b3443; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:28px 64px;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--font-display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,7vw,4.2rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,4.4vw,2.3rem);font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0;max-width:65ch}
+.eyebrow{font-family:var(--font-data);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.num{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+a{color:var(--sea)}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.hero .stack{min-width:0}
+.lede{font-size:1.15rem;color:var(--muted)}
+.sunbox{width:140px;height:140px;position:relative}
+.sunbox canvas{width:100%;height:100%}
+@media (max-width:560px){.hero{grid-template-columns:1fr}.sunbox{width:110px;height:110px;order:-1}}
+
+/* Previsão */
+.forecast{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.fc .icon{font-size:1.9rem;line-height:1}
+.fc .big{font-family:var(--font-data);font-size:1.5rem;font-weight:600;font-variant-numeric:tabular-nums}
+.fc small{color:var(--muted);font-size:.88rem;line-height:1.4}
+@media (max-width:640px){.forecast{grid-template-columns:1fr}}
+
+.callout{background:var(--chip);border-radius:14px;padding:18px 20px}
+.callout strong{color:var(--ink)}
+
+/* Charts */
+.chartcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 16px 12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.chartbox{position:relative;height:360px;width:100%}
+@media (max-width:560px){.chartbox{height:300px}}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{font:inherit;font-size:.85rem;background:transparent;color:var(--muted);border:0;padding:6px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.note{font-size:.85rem;color:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.88rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* Tabela */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-data);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.r,th.r{text-align:right}
+tr.now td{background:var(--chip)}
+
+/* Máquina do tempo */
+.machine{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:640px){.machine{grid-template-columns:1fr}}
+.years{display:flex;flex-wrap:wrap;gap:6px}
+.years button{font-family:var(--font-data);font-size:.9rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+.years button[aria-pressed="true"]{background:var(--sun);border-color:var(--sun);color:#1d1400}
+.result{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.result .money{font-family:var(--font-display);font-size:clamp(2.2rem,7vw,3.2rem);font-weight:800;color:var(--sea);font-variant-numeric:tabular-nums}
+.coins{font-size:1.2rem;letter-spacing:2px;word-break:break-all;line-height:1.5;min-height:1.5em}
+
+/* Cesta */
+.basket{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:18px}
+@media (max-width:640px){.basket{grid-template-columns:1fr}}
+.slider{display:flex;flex-direction:column;gap:4px}
+.slider label{display:flex;justify-content:space-between;gap:8px;font-weight:700}
+.slider label span{font-family:var(--font-data);font-weight:600}
+.slider small{color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--sea)}
+.gauge{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.gauge .money{font-family:var(--font-display);font-size:3rem;font-weight:800;font-variant-numeric:tabular-nums}
+.bar{height:14px;border-radius:999px;background:var(--chip);width:100%;position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:999px}
+
+/* Quadrantes */
+.quad{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.q .tag{font-family:var(--font-data);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.q b{font-family:var(--font-display);font-size:1.05rem}
+@media (max-width:480px){.quad{grid-template-columns:1fr}}
+
+.quotes{display:grid;gap:12px}
+blockquote{margin:0;padding:16px 18px;border-left:4px solid var(--sun);background:var(--surface);border-radius:0 12px 12px 0}
+blockquote p{font-size:1.05rem;font-style:italic}
+blockquote footer{margin-top:6px;font-size:.88rem;color:var(--muted)}
+
+.checks{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.checks li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.checks li::before{content:"☀";color:var(--sun-ink);font-size:1.1rem;line-height:1.5}
+.watch li::before{content:"🔭"}
+
+/* Respira */
+.breathe{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;padding-block:12px}
+.bubble{width:200px;height:200px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 35%, var(--sun), color-mix(in srgb, var(--sun) 40%, var(--sea)) 70%);color:#1d1400;font-family:var(--font-display);font-weight:700;font-size:1.25rem;transform:scale(.72);transition:transform 4s ease-in-out}
+.bubble.in{transform:scale(1)}
+.bigbtn{font:inherit;font-weight:700;background:var(--ink);color:var(--bg);border:0;border-radius:999px;padding:12px 22px;cursor:pointer}
+@media (prefers-reduced-motion: reduce){.bubble{transition:none}}
+
+.sources{font-size:.85rem;color:var(--muted)}
+.sources ol{padding-left:20px;margin:6px 0 0;display:grid;gap:4px}
+.foot{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="stack">
+    <span class="eyebrow">Boletim do tempo · edição de 28 de outubro de 2026</span>
+    <h1>Respira, Jé.</h1>
+    <p class="lede">Teve tempestade forte na segunda. Mas tempo é uma coisa e clima é outra. O tempo é o que cai do céu hoje. O clima é o que acontece em décadas. Aqui vai a previsão das duas coisas, com números e sem torcida.</p>
+  </div>
+  <div class="sunbox" aria-hidden="true"><canvas id="sun" width="280" height="280"></canvas></div>
+</header>
+
+<section class="stack" aria-labelledby="h-prev">
+  <h2 id="h-prev">A previsão de hoje</h2>
+  <div class="forecast">
+    <div class="fc">
+      <span class="icon" aria-hidden="true">⛈️</span>
+      <span class="eyebrow">Segunda, 26/10</span>
+      <span class="big down">−13,88%</span>
+      <small>Ibovespa caiu até 176.608 pontos e acionou o circuit breaker (a pausa automática da B3), o primeiro desde março de 2020. Dólar subiu 8%, a R$ 5,40.</small>
+    </div>
+    <div class="fc">
+      <span class="icon" aria-hidden="true">🌦️</span>
+      <span class="eyebrow">Terça, 27/10</span>
+      <span class="big">−0,51%</span>
+      <small>Bolsa praticamente parou de cair. Dólar devolveu 1% (R$ 5,35) e o juro futuro de 2028 recuou 0,41 ponto. O mercado chamou de "acomodação".</small>
+    </div>
+    <div class="fc">
+      <span class="icon" aria-hidden="true">🌤️</span>
+      <span class="eyebrow">No ano de 2026</span>
+      <span class="big up">+9%</span>
+      <small>Mesmo depois do tombo, o Ibovespa (175.710) ainda está acima de onde fechou 2025 (161.125). Quem entrou em janeiro ainda está no azul.</small>
+    </div>
+  </div>
+  <div class="callout">
+    <p><strong>Tradução:</strong> o mercado tinha apostado em um resultado e veio outro. Muita gente desmontou a aposta ao mesmo tempo, e isso empurra o preço para baixo de uma vez. É uma correção de expectativa, que costuma ser rápida e exagerada. Ela não muda, de um dia para o outro, quanto as empresas brasileiras lucram.</p>
+  </div>
+</section>
+
+<section class="stack" aria-labelledby="h-clima">
+  <span class="eyebrow">O clima</span>
+  <h2 id="h-clima">32 anos de bolsa, 9 eleições</h2>
+  <p>Cada linha pontilhada é uma eleição presidencial desde o Plano Real. Repara que a escada sobe com presidentes de todos os lados, e que os maiores tombos (1998, 2008, 2020) vieram de crises lá fora: Rússia, Lehman Brothers e pandemia.</p>
+  <div class="chartcard">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Escala do gráfico">
+        <button type="button" id="sc-log" aria-pressed="true">Escala de crescimento</button>
+        <button type="button" id="sc-lin" aria-pressed="false">Pontos normais</button>
+      </div>
+    </div>
+    <div class="chartbox"><canvas id="ibov" aria-label="Gráfico do Ibovespa de 1994 a 2026 com eleições marcadas" role="img"></canvas></div>
+    <p class="note">Ibovespa no fim de cada ano, mais dois pontos de 2026: 23/10 (sexta antes do 2º turno, 205.089) e 27/10 (175.710). A "escala de crescimento" (logarítmica) mostra cada degrau pelo tamanho da variação em %, e é a forma justa de comparar 1995 com 2025. Valores nominais, sem descontar inflação.</p>
+  </div>
+</section>
+
+<section class="stack" aria-labelledby="h-mand">
+  <h2 id="h-mand">Mandato por mandato</h2>
+  <p>Do fim do ano da eleição até o fim do mandato. Em 7 de 8 mandatos a bolsa terminou acima de onde começou. O único negativo (2011 a 2014) mostra que governo importa, sim. Só que importa ao longo de anos, e não na segunda-feira depois da eleição.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Mandato</th><th>Presidente</th><th class="r">Início</th><th class="r">Fim</th><th class="r">Variação</th></tr></thead>
+      <tbody id="tbl"></tbody>
+    </table>
+  </div>
+  <p class="note">China, juros nos EUA e preço das commodities também mexem muito com o Ibovespa. Por isso nenhuma tabela dessas "prova" que um presidente foi bom ou ruim. O ponto é outro: quem ficou investido atravessou todos eles.</p>
+</section>
+
+<section class="stack" aria-labelledby="h-ressaca">
+  <span class="eyebrow">A ressaca pós-eleição</span>
+  <h2 id="h-ressaca">O primeiro dia assusta. A primeira semana acalma.</h2>
+  <p>Nas seis eleições de 2002 a 2022, a bolsa caiu no dia seguinte em quatro. E subiu na primeira semana em todas as seis.</p>
+  <div class="chartcard">
+    <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>1º pregão depois do 2º turno</span><span><i class="sw" style="background:var(--s2)"></i>1ª semana inteira</span></div>
+    <div class="chartbox" style="height:320px"><canvas id="ressaca" role="img" aria-label="Variação do Ibovespa no primeiro dia e na primeira semana após cada eleição"></canvas></div>
+    <p class="note">Dados da Elos Ayta. 2026 ainda não tem semana completa, por isso só aparece o primeiro dia. Foi uma queda bem maior do que as anteriores, então a recuperação pode levar mais tempo. A tendência histórica é a mesma.</p>
+  </div>
+</section>
+
+<section class="stack" aria-labelledby="h-maq">
+  <span class="eyebrow">Brinquedo</span>
+  <h2 id="h-maq">Máquina do tempo do pânico</h2>
+  <p>Escolhe uma eleição. Imagina que alguém colocou R$ 1.000 no Ibovespa no fim daquele ano, com todo o medo da época, e não mexeu mais. Quanto valeria hoje, já contando o tombo de segunda?</p>
+  <div class="machine">
+    <div class="stack">
+      <div class="years" id="years" role="group" aria-label="Escolha o ano da eleição"></div>
+      <p class="note" id="mood"></p>
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="eyebrow" id="r-label">R$ 1.000 em 2002 viraram</span>
+      <span class="money" id="r-money">R$ 0</span>
+      <span class="coins" id="r-coins" aria-hidden="true"></span>
+      <span class="note" id="r-mult"></span>
+    </div>
+  </div>
+  <p class="note">O Ibovespa já considera dividendos reinvestidos. Valores nominais. A renda fixa também rendeu bem no Brasil nesse período, e é por isso que o próximo bloco fala de dividir os ovos.</p>
+</section>
+
+<section class="stack" aria-labelledby="h-cesta">
+  <span class="eyebrow">Brinquedo 2</span>
+  <h2 id="h-cesta">Monte uma cesta e passe pela tempestade</h2>
+  <p>Mexe nas barrinhas e veja quanto uma carteira teria perdido só na segunda-feira, 26/10. Hedge é exatamente isso: ter algo que sobe quando o resto cai, como um guarda-chuva.</p>
+  <div class="basket">
+    <div class="stack">
+      <div class="slider"><label for="w-acoes">📈 Ações (Ibovespa) <span id="o-acoes">40%</span></label><input type="range" id="w-acoes" min="0" max="100" step="5" value="40"><small>Naquele dia: −13,88%</small></div>
+      <div class="slider"><label for="w-dolar">💵 Dólar <span id="o-dolar">15%</span></label><input type="range" id="w-dolar" min="0" max="100" step="5" value="15"><small>Naquele dia: +8,2%</small></div>
+      <div class="slider"><label for="w-rf">🏦 Renda fixa pós (CDI) <span id="o-rf">45%</span></label><input type="range" id="w-rf" min="0" max="100" step="5" value="45"><small>Naquele dia: rendeu cerca de +0,05%, como em qualquer dia útil</small></div>
+      <p class="note" id="sumnote"></p>
+    </div>
+    <div class="gauge" aria-live="polite">
+      <span class="eyebrow">Resultado da cesta em 26/10</span>
+      <span class="money" id="g-val">0%</span>
+      <div class="bar" aria-hidden="true"><i id="g-bar"></i></div>
+      <span class="note" id="g-cmp"></span>
+    </div>
+  </div>
+  <p class="note">Simulação de um único dia, para ilustrar. Não é recomendação de carteira.</p>
+</section>
+
+<section class="stack" aria-labelledby="h-juros">
+  <span class="eyebrow">A parte que te pega direto</span>
+  <h2 id="h-juros">E os juros do financiamento?</h2>
+  <p>Essa é a parte mais concreta, então vamos com calma.</p>
+  <ul class="checks">
+    <li><span><strong>O que aconteceu:</strong> o Bradesco subiu a taxa média do financiamento imobiliário de cerca de 11,7% para cerca de 15% ao ano + TR, segundo a MySide. A menor taxa anunciada está em 13,6% + TR, para clientes de alta renda.</span></li>
+    <li><span><strong>Por quê:</strong> o banco empresta por 20 ou 30 anos, então ele olha os juros futuros (o DI, que é a aposta do mercado sobre os juros lá na frente). Na segunda, o DI longo pulou cerca de 2,6 pontos em um único dia. O banco repassou o susto.</span></li>
+    <li><span><strong>Mas o susto já começou a desinflar:</strong> na terça, o DI de 2028 caiu 0,41 ponto. Quem decide a Selic é o Banco Central, não o mercado nem o Bradesco. E a Selic está em 13,75%, depois de cinco cortes seguidos desde março.</span></li>
+    <li><span><strong>Contrato já assinado:</strong> na maioria dos financiamentos imobiliários, a taxa de juros fica escrita no contrato. O aumento vale para contratos novos. Vale conferir o seu.</span></li>
+    <li><span><strong>Taxa não é casamento:</strong> existe a portabilidade de crédito. Se os juros caírem lá na frente, dá para levar a dívida para outro banco com taxa menor, sem pagar multa por isso.</span></li>
+    <li><span><strong>O outro lado da moeda:</strong> juro alto é ruim para quem pega emprestado e ótimo para quem empresta. O Tesouro Prefixado 2032 passou a pagar mais de 15% ao ano. Para quem tem dinheiro guardado, isso é oportunidade.</span></li>
+  </ul>
+  <div class="callout">
+    <p><strong>Já vimos esse filme em 2002.</strong> Antes da posse, o dólar chegou perto de R$ 4 e o risco-país passou de 2.000 pontos. A Selic subiu até 26,5% no começo de 2003. No fim daquele mesmo ano, a Selic já estava em 16,5%, o dólar abaixo de R$ 2,90 e a bolsa tinha subido 97%. Não existe garantia de repetição, mas o pânico pré-posse, sozinho, não definiu o que veio depois.</p>
+  </div>
+</section>
+
+<section class="stack" aria-labelledby="h-pros">
+  <span class="eyebrow">Como os profissionais pensam</span>
+  <h2 id="h-pros">Ninguém sério aposta tudo em um cenário</h2>
+  <p>Ray Dalio, que fundou o maior fundo hedge do mundo, chama a diversificação de "Santo Graal" do investimento. A ideia da carteira All Weather ("para todo tempo") dele é simples: o mundo pode ir para quatro lados, então tenha algo que vai bem em cada um.</p>
+  <div class="quad">
+    <div class="q"><span class="tag">☀️ Economia cresce</span><b>Ações, crédito de empresas</b><small class="note">Empresas lucram mais.</small></div>
+    <div class="q"><span class="tag">🌧️ Economia esfria</span><b>Títulos prefixados</b><small class="note">Juros caem e esses títulos valorizam.</small></div>
+    <div class="q"><span class="tag">🔥 Inflação sobe</span><b>Tesouro IPCA+, ouro</b><small class="note">Protegem o poder de compra.</small></div>
+    <div class="q"><span class="tag">🧊 Inflação cai</span><b>Ações e prefixados</b><small class="note">Os dois costumam gostar.</small></div>
+  </div>
+  <p>E para quem mora no Brasil, ter um pedaço em dólar ou ativos lá fora funciona como seguro contra risco local. Foi o que salvou quem tinha dólar na segunda.</p>
+  <div class="quotes">
+    <blockquote><p>"Seja medroso quando os outros estiverem gananciosos, e ganancioso quando os outros estiverem com medo."</p><footer>Warren Buffett</footer></blockquote>
+    <blockquote><p>"Quem vive pela bola de cristal acaba comendo vidro quebrado."</p><footer>Ray Dalio</footer></blockquote>
+    <blockquote><p>"Investidores perderam muito mais dinheiro se preparando para quedas, ou tentando adivinhá-las, do que nas próprias quedas."</p><footer>Peter Lynch</footer></blockquote>
+  </div>
+</section>
+
+<section class="stack" aria-labelledby="h-dieta">
+  <span class="eyebrow">Dieta de notícias</span>
+  <h2 id="h-dieta">Medo dá clique</h2>
+  <p>Vídeo dizendo "o Brasil acabou" tem mais visualização do que vídeo dizendo "calma, diversifica". E muitas vezes quem espalha o medo também vende o curso, a assinatura ou o fundo que promete te proteger. Não precisa ser má-fé: o incentivo é esse, de qualquer lado político.</p>
+  <ul class="checks">
+    <li><span>Desconfia de quem tem certeza absoluta, seja do apocalipse ou do foguete.</span></li>
+    <li><span>Não decide nada importante na semana do susto. Pânico é péssimo conselheiro financeiro.</span></li>
+    <li><span>Olha o extrato uma vez por mês, e não a cotação a cada hora.</span></li>
+    <li><span>Lembra que a economia real continua girando: o desemprego ficou em 5,3% no trimestre até agosto, o menor para esse período desde 2012.</span></li>
+  </ul>
+</section>
+
+<section class="stack" aria-labelledby="h-obs">
+  <span class="eyebrow">Sem torcida</span>
+  <h2 id="h-obs">O que vale acompanhar de verdade</h2>
+  <p>O mercado tem uma dúvida legítima, e ela é sobre as contas públicas: o governo vai gastar mais do que arrecada? Essa pergunta se responde com fatos nos próximos meses, e não com gritaria. Os sinais que importam:</p>
+  <ul class="checks watch">
+    <li><span>Quem será a equipe econômica do novo mandato e o que ela promete para as contas.</span></li>
+    <li><span>O orçamento de 2027 e se ele respeita as regras fiscais.</span></li>
+    <li><span>O que o Banco Central faz com a Selic nas próximas reuniões.</span></li>
+    <li><span>Se o dólar e os juros futuros continuam devolvendo o susto, como começaram a fazer na terça.</span></li>
+  </ul>
+  <p>Se esses sinais vierem bons, o susto desinfla. Se vierem ruins, quem está diversificado sofre menos. Nos dois casos, a cesta bem montada é o que protege.</p>
+</section>
+
+<section class="breathe" aria-labelledby="h-resp">
+  <h2 id="h-resp">Agora respira</h2>
+  <div class="bubble" id="bubble">pronta?</div>
+  <button class="bigbtn" type="button" id="breathe-btn">Respirar comigo (30 segundos)</button>
+  <p class="note">Puxa o ar enquanto o sol cresce, solta enquanto ele diminui. O mercado vai estar aí amanhã também.</p>
+</section>
+
+<section class="sources" aria-labelledby="h-src">
+  <h3 id="h-src">Fontes</h3>
+  <ol>
+    <li><a href="https://www.infomoney.com.br/mercados/ibovespa-hoje-bolsa-de-valores-ao-vivo-26102026/" target="_blank" rel="noopener">InfoMoney: Ibovespa desaba 13% após eleição, em dia de circuit breaker (26/10/2026)</a></li>
+    <li><a href="https://www.cnnbrasil.com.br/economia/money/mercado/mercado-financeiro-ibovespa-dolar-27-outubro-2026/" target="_blank" rel="noopener">CNN Brasil: dólar e juros futuros devolvem parte dos ganhos (27/10/2026)</a></li>
+    <li><a href="https://www.tnh1.com.br/noticia/nid/mercado-teve-a-pior-reacao-das-ultimas-seis-eleicoes-presidenciais/" target="_blank" rel="noopener">TNH1 / Elos Ayta: reação do mercado nas últimas seis eleições</a></li>
+    <li><a href="https://investidor10.com.br/noticias/acima-da-selic-bradesco-eleva-juros-do-financiamento-imobiliario-para-15-ao-ano-123561/" target="_blank" rel="noopener">Investidor10: Bradesco eleva juros do financiamento imobiliário para 15% ao ano</a></li>
+    <li><a href="https://99app.com/blog/99pay/selic-cai-para-13-75-o-que-muda-no-seu-bolso-apos-a-decisao-do-copom/" target="_blank" rel="noopener">Selic cai para 13,75% (Copom, 16/09/2026)</a></li>
+    <li><a href="https://www.dgabc.com.br/Noticia/4349737/taxa-de-desemprego-no-brasil-e-a-menor-para-trimestre-ate-agosto-desde-2012-mostra-ibge" target="_blank" rel="noopener">DGABC / IBGE: desemprego de 5,3% no trimestre até agosto de 2026</a></li>
+    <li><a href="https://www.infomoney.com.br/?p=3156582" target="_blank" rel="noopener">InfoMoney: Ibovespa fecha 2025 em 161.125 pontos</a></li>
+    <li><a href="https://pro.macrotrends.net/2597/bovespa-index-brazil-historical-chart-data" target="_blank" rel="noopener">Macrotrends: fechamentos anuais do Ibovespa de 1994 a 2022</a> e <a href="https://borainvestir.b3.com.br/noticias/mercado/ibovespa-fecha-2023-com-alta-de-22-e-alcanca-maior-patamar-da-historia-aos-134-mil-pontos-dolar-cai-8-no-ano/" target="_blank" rel="noopener">B3 (2023)</a>, <a href="https://www.bloomberglinea.com.br/mercados/ibovespa-encerra-o-ano-com-queda-de-10-e-dolar-sobe-27-moeda-vai-a-r-618/" target="_blank" rel="noopener">Bloomberg Línea (2024)</a></li>
+  </ol>
+</section>
+
+<p class="foot">Feito com carinho pelo Gui, para a Jé. Isto é informação para acalmar o coração, e não recomendação de investimento. Antes de mexer no dinheiro, converse com quem conhece a sua situação.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+(function(){
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (v,d=0) => v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = v => (v>0?'+':v<0?'−':'') + fmt(Math.abs(v),1) + '%';
+
+// Fechamentos anuais
+const closes = {1994:4353.9,1995:4299,1996:7039.9,1997:10197,1998:6784,1999:17092,2000:15259,2001:13578,2002:11268,2003:22236,2004:26196,2005:33456,2006:44474,2007:63886,2008:37550,2009:68588,2010:69305,2011:56754,2012:60952,2013:51507,2014:50007,2015:43350,2016:60227,2017:76402,2018:87887,2019:115645,2020:119017,2021:104822,2022:109735,2023:134185,2024:120283,2025:161125};
+const NOW = 175710, PRE = 205089;
+const elections = [[1994,'FHC'],[1998,'FHC'],[2002,'Lula'],[2006,'Lula'],[2010,'Dilma'],[2014,'Dilma'],[2018,'Bolsonaro'],[2022,'Lula'],[2026,'Lula']];
+const pts = Object.entries(closes).map(([y,v])=>({x:+y+1, y:v, lbl:'Fim de '+y}));
+pts.push({x:2026.81,y:PRE,lbl:'23/10/2026, antes do 2º turno'},{x:2026.83,y:NOW,lbl:'27/10/2026'});
+
+// Mandatos
+const terms = [
+  ['1995 a 1998','FHC',1994,1998],['1999 a 2002','FHC',1998,2002],['2003 a 2006','Lula',2002,2006],['2007 a 2010','Lula',2006,2010],
+  ['2011 a 2014','Dilma',2010,2014],['2015 a 2018','Dilma / Temer',2014,2018],['2019 a 2022','Bolsonaro',2018,2022],['2023 até hoje','Lula',2022,null]
+];
+const tb = document.getElementById('tbl');
+terms.forEach(([p,who,a,b])=>{
+  const s=closes[a], e=b?closes[b]:NOW, ch=(e/s-1)*100;
+  const tr=document.createElement('tr'); if(!b) tr.className='now';
+  tr.innerHTML=`<td>${p}</td><td>${who}</td><td class="r num">${fmt(s)}</td><td class="r num">${fmt(e)}${b?'':' *'}</td><td class="r num ${ch>=0?'up':'down'}">${pct(ch)}</td>`;
+  tb.appendChild(tr);
+});
+const tf=document.createElement('tr'); tf.innerHTML='<td colspan="5" class="note">* em 27/10/2026, depois do tombo da segunda.</td>'; tb.appendChild(tf);
+
+// Plugin: linhas das eleições
+const elecLines = {
+  id:'elec',
+  afterDatasetsDraw(c){
+    const {ctx, chartArea:a, scales:{x}} = c; ctx.save();
+    elections.forEach(([y,who])=>{
+      const px = x.getPixelForValue(y+0.82); if(px<a.left||px>a.right) return;
+      ctx.strokeStyle = y===2026 ? css('--down') : css('--storm'); ctx.globalAlpha = y===2026 ? .9 : .55;
+      ctx.setLineDash([3,4]); ctx.lineWidth=1.25; ctx.beginPath(); ctx.moveTo(px,a.top+14); ctx.lineTo(px,a.bottom); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha=1; ctx.fillStyle=css('--muted'); ctx.font='600 10px "IBM Plex Mono", monospace'; ctx.textAlign='center';
+      ctx.fillText(String(y).slice(2).padStart(2,'0')==='26'?'2026':"'"+String(y).slice(2), px, a.top+8);
+    });
+    ctx.restore();
+  }
+};
+
+let ibov, ressaca;
+function buildIbov(scale){
+  if(ibov) ibov.destroy();
+  const ink=css('--ink'), muted=css('--muted'), line=css('--line'), sea=css('--sea');
+  ibov = new Chart(document.getElementById('ibov'),{
+    type:'line',
+    data:{datasets:[{data:pts,parsing:false,borderColor:sea,borderWidth:2,pointRadius:ctx=>ctx.dataIndex>=pts.length-2?5:0,pointHoverRadius:6,pointBackgroundColor:ctx=>ctx.dataIndex===pts.length-1?css('--down'):sea,pointBorderColor:css('--surface'),pointBorderWidth:2,tension:.15,fill:{target:'origin'},backgroundColor:sea+'1f'}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},
+      interaction:{mode:'nearest',axis:'x',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:css('--surface'),titleColor:ink,bodyColor:ink,borderColor:line,borderWidth:1,padding:10,displayColors:false,
+          callbacks:{title:i=>i[0].raw.lbl,label:i=>fmt(i.raw.y)+' pontos'}}},
+      scales:{
+        x:{type:'linear',min:1994.6,max:2027.3,grid:{display:false},border:{color:line},ticks:{color:muted,stepSize:4,callback:v=>Number.isInteger(v)&&(v-1994)%4===0?v:'',font:{family:'IBM Plex Mono',size:11}}},
+        y:{type:scale,min:scale==='logarithmic'?3000:0,max:scale==='logarithmic'?260000:220000,grid:{color:line+'99'},border:{display:false},
+          ticks:{color:muted,font:{family:'IBM Plex Mono',size:11},autoSkip:false,
+            callback:v=>{ if(scale==='logarithmic'){ return [5000,10000,20000,50000,100000,200000].includes(v)? (v>=1000?fmt(v/1000)+' mil':v):''; } return fmt(v/1000)+' mil'; }},
+          afterBuildTicks:ax=>{ if(scale==='logarithmic') ax.ticks=[5000,10000,20000,50000,100000,200000].map(v=>({value:v})); }}
+      }},
+    plugins:[elecLines]
+  });
+}
+
+const rData = [
+  ['2002',-4.40,1.26],['2006',-1.09,2.81],['2010',1.26,2.74],['2014',-2.77,5.18],['2018',-2.24,3.15],['2022',1.31,3.16],['2026',-13.88,null]
+];
+function buildRessaca(){
+  if(ressaca) ressaca.destroy();
+  const muted=css('--muted'), line=css('--line'), ink=css('--ink');
+  ressaca = new Chart(document.getElementById('ressaca'),{
+    type:'bar',
+    data:{labels:rData.map(r=>r[0]),datasets:[
+      {label:'1º pregão',data:rData.map(r=>r[1]),backgroundColor:css('--s1'),borderRadius:4,borderSkipped:false,maxBarThickness:26},
+      {label:'1ª semana',data:rData.map(r=>r[2]),backgroundColor:css('--s2'),borderRadius:4,borderSkipped:false,maxBarThickness:26}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:css('--surface'),titleColor:ink,bodyColor:ink,borderColor:line,borderWidth:1,padding:10,
+        callbacks:{title:i=>'Eleição de '+i[0].label,label:i=>i.raw==null?' 1ª semana: ainda em andamento':' '+i.dataset.label+': '+pct(i.raw)}}},
+      scales:{x:{grid:{display:false},border:{color:line},ticks:{color:muted,font:{family:'IBM Plex Mono',size:11}}},
+        y:{min:-15,max:7,grid:{color:ctx=>ctx.tick.value===0?css('--muted'):line+'99'},border:{display:false},ticks:{color:muted,stepSize:5,callback:v=>v+'%',font:{family:'IBM Plex Mono',size:11}}}}
+    }
+  });
+}
+
+let curScale='logarithmic';
+function setScale(s){curScale=s;document.getElementById('sc-log').setAttribute('aria-pressed',s==='logarithmic');document.getElementById('sc-lin').setAttribute('aria-pressed',s==='linear');buildIbov(s);}
+document.getElementById('sc-log').onclick=()=>setScale('logarithmic');
+document.getElementById('sc-lin').onclick=()=>setScale('linear');
+function buildAll(){ if(window.Chart){ buildIbov(curScale); buildRessaca(); } }
+buildAll();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',buildAll);
+new MutationObserver(buildAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// Máquina do tempo
+const moods = {1994:'Inflação recém domada, país desconfiado do Plano Real.',1998:'Crise da Rússia, bolsa tinha acabado de cair 33% no ano.',2002:'Dólar perto de R$ 4 e muita gente jurando que o país ia quebrar.',2006:'Escândalo do mensalão ainda fresco.',2010:'Mundo saindo da crise de 2008.',2014:'Eleição mais apertada até então, recessão chegando.',2018:'País dividido, greve dos caminhoneiros no mesmo ano.',2022:'Juros em 13,75% e eleição decidida por margem mínima.'};
+const yb=document.getElementById('years'); let anim;
+Object.keys(moods).forEach(y=>{const b=document.createElement('button');b.type='button';b.textContent=y;b.setAttribute('aria-pressed','false');b.onclick=()=>pick(+y);yb.appendChild(b);});
+function pick(y){
+  [...yb.children].forEach(b=>b.setAttribute('aria-pressed',b.textContent==y));
+  const mult=NOW/closes[y], target=1000*mult;
+  document.getElementById('r-label').textContent=`R$ 1.000 no fim de ${y} viraram`;
+  document.getElementById('mood').textContent='O clima da época: '+moods[y];
+  document.getElementById('r-mult').textContent=`${fmt(mult,1)} vezes o valor inicial, mesmo com o tombo de segunda.`;
+  const coins=Math.min(40,Math.round(mult)); document.getElementById('r-coins').textContent='🪙'.repeat(coins)+(mult>40?' …':'');
+  const el=document.getElementById('r-money'); cancelAnimationFrame(anim);
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){el.textContent='R$ '+fmt(target);return;}
+  const t0=performance.now(); const step=t=>{const k=Math.min(1,(t-t0)/900);const e=1-Math.pow(1-k,3);el.textContent='R$ '+fmt(1000+(target-1000)*e);if(k<1)anim=requestAnimationFrame(step);};anim=requestAnimationFrame(step);
+}
+pick(2002);
+
+// Cesta
+const W={acoes:document.getElementById('w-acoes'),dolar:document.getElementById('w-dolar'),rf:document.getElementById('w-rf')};
+const R={acoes:-13.88,dolar:8.2,rf:0.05};
+function calc(changed){
+  let a=+W.acoes.value,d=+W.dolar.value,r=+W.rf.value; const tot=a+d+r;
+  if(tot!==100 && changed){ // ajusta as outras para somar 100
+    const others=Object.keys(W).filter(k=>k!==changed); let rest=100-+W[changed].value;
+    const s=others.reduce((x,k)=>x+ +W[k].value,0);
+    others.forEach((k,i)=>{ W[k].value = s===0 ? (i===0?rest:0) : Math.round((+W[k].value/s*rest)/5)*5; });
+    const fix=100-Object.values(W).reduce((x,el)=>x+ +el.value,0); W[others[0]].value=+W[others[0]].value+fix;
+    a=+W.acoes.value;d=+W.dolar.value;r=+W.rf.value;
+  }
+  document.getElementById('o-acoes').textContent=a+'%';document.getElementById('o-dolar').textContent=d+'%';document.getElementById('o-rf').textContent=r+'%';
+  const res=(a*R.acoes+d*R.dolar+r*R.rf)/100;
+  const v=document.getElementById('g-val'); v.textContent=pct(res); v.className='money '+(res>=0?'up':'down');
+  const bar=document.getElementById('g-bar'); const w=Math.min(100,Math.abs(res)/13.88*100);
+  bar.style.width=w+'%'; bar.style.left='0'; bar.style.background=res>=0?css('--up'):css('--down');
+  const ratio=res<0?Math.abs(res)/13.88:0;
+  document.getElementById('g-cmp').textContent = res>=0 ? 'Essa cesta terminou o pior dia desde a pandemia no positivo.' : `Quem tinha 100% em ações perdeu 13,88%. Essa cesta perdeu ${fmt(Math.abs(res),1)}%, ou seja, ${fmt(ratio*100,0)}% do tombo.`;
+  document.getElementById('sumnote').textContent='As três barrinhas sempre somam 100%.';
+}
+Object.entries(W).forEach(([k,el])=>el.addEventListener('input',()=>calc(k)));
+calc();
+
+// Sol animado (canvas)
+const sc=document.getElementById('sun'), sx=sc.getContext('2d'); let t=0;
+const still=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function drawSun(){
+  const w=sc.width,h=sc.height,c=w/2; sx.clearRect(0,0,w,h);
+  const sun=css('--sun'), storm=css('--storm');
+  sx.save(); sx.translate(c*0.9,c*0.85); sx.rotate(t/400);
+  sx.strokeStyle=sun; sx.lineWidth=8; sx.lineCap='round';
+  for(let i=0;i<10;i++){ sx.rotate(Math.PI/5); sx.beginPath(); sx.moveTo(0,70); sx.lineTo(0,92+Math.sin(t/30+i)*6); sx.stroke(); }
+  sx.restore();
+  sx.fillStyle=sun; sx.beginPath(); sx.arc(c*0.9,c*0.85,56,0,Math.PI*2); sx.fill();
+  // nuvem que vai embora
+  const off=(Math.sin(t/120)+1)*28;
+  sx.fillStyle=storm; sx.globalAlpha=.85;
+  [[0,0,34],[38,-14,40],[78,0,32],[40,14,30]].forEach(([dx,dy,r])=>{sx.beginPath();sx.arc(60+off+dx,190+dy,r,0,Math.PI*2);sx.fill();});
+  sx.globalAlpha=1;
+  if(!still){t++;requestAnimationFrame(drawSun);}
+}
+drawSun();
+
+// Respira
+const bub=document.getElementById('bubble'), bb=document.getElementById('breathe-btn'); let timer;
+bb.onclick=()=>{
+  clearTimeout(timer); let n=0; bb.disabled=true;
+  const cycle=()=>{ if(n>=6){bub.textContent='melhor? 💛';bub.classList.remove('in');bb.disabled=false;return;}
+    const inhale=n%2===0; bub.classList.toggle('in',inhale); bub.textContent=inhale?'puxa…':'solta…'; n++; timer=setTimeout(cycle,5000); };
+  cycle();
+};
+})();
+</script>
+
+</body>
+</html>
