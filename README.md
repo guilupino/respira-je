@@ -3,7 +3,8 @@
 Um "boletim do tempo" do bolso: uma página única, em linguagem simples, para colocar em
 contexto a queda da bolsa depois do segundo turno de 25 de outubro de 2026.
 
-Publicado em <https://guilupino.github.io/respira-je/>
+Publicado em <https://respira-je.netlify.app/> (Netlify) e
+<https://guilupino.github.io/respira-je/> (GitHub Pages).
 
 ---
 
@@ -78,5 +79,11 @@ ajuste à mão a data "27/10/2026" e os números dos cartões do topo (como o "+
 
 ## Publicação
 
-O site é servido pelo GitHub Pages a partir da raiz da branch `main`. Qualquer push que
-altere o `index.html` publica a nova versão em um ou dois minutos.
+O site é servido pelo Netlify e pelo GitHub Pages, os dois a partir da raiz da branch
+`main`. Qualquer push que altere o `index.html` publica a nova versão nos dois endereços
+em um ou dois minutos.
+
+Configuração no Netlify:
+
+- **Build command:** vazio
+- **Publish directory:** raiz do repositório
